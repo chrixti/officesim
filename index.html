@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Odyssey</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .chat-bubble {
+      position: relative;
+      background: #2563eb;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .chat-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -0.5rem;
+      width: 1rem;
+      height: 1rem;
+      background: #2563eb;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+  </style>
+</head>
+
+<body class="bg-white min-h-screen">
+  <div id="app">
+    <!-- Window Header -->
+    <div class="flex justify-between items-center p-4 border-2 border-black">
+      <h1 class="text-xl">Office Odyssey</h1>
+      <div class="flex space-x-2">
+        <button class="w-8 h-8 border-2 border-black flex items-center justify-center">-</button>
+        <button class="w-8 h-8 border-2 border-black flex items-center justify-center">□</button>
+        <button class="w-8 h-8 border-2 border-black flex items-center justify-center">x</button>
+      </div>
+    </div>
+
+    <div id="game" class="p-8">
+      <!-- Content will be dynamically inserted here -->
+    </div>
+
+    <!-- Sarah's avatar and chat bubble (only shown during scenarios) -->
+    <div id="sarah-mentor" class="fixed bottom-8 right-8 flex items-end space-x-4 hidden">
+      <div class="chat-bubble max-w-md text-white text-lg">
+        <!-- Chat content will be inserted here -->
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 rounded-full bg-white border-2 border-black overflow-hidden">
+          <img src="sarah.png" alt="Sarah" class="w-full h-full">
+        </div>
+        <span class="mt-2 text-sm font-bold">Sarah</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        day: 1,
+        title: "Mysterious Productivity Boost",
+        text: "Walking into your new office on a bright Monday morning, you're greeted by HR. They're waving a report in their hand.\n\n<span class=\"italic font-bold\">\"You won't believe this!\"</span> they exclaim. <span class=\"italic font-bold\">\"During our recent workplace observation study, productivity numbers shot up by 30%! The team's output has never been this high. Should we make these observation practices permanent?\"</span>\n\nYou lean back in your chair, considering the implications of this unexpected boost in performance.",
+        mentor: "Interesting findings from HR! Before we jump to conclusions, let's think about what might really be driving this sudden productivity increase...",
+        type: "team",
+        choices: [
+          {text: "Implement permanent changes to the work environment.", outcome: "neutral"},
+          {text: "Recognize that observation itself may be boosting performance.", outcome: "good"},
+          {text: "Ignore the increase; it's likely temporary.", outcome: "bad"}
+        ],
+        concept: {
+          title: "The Hawthorne Effect",
+          explanation: "This scenario demonstrates the Hawthorne Effect - how people modify their behavior when they know they're being observed. Understanding this helps avoid making permanent changes based on temporary improvements."
+        }
+      },
+      {
+        day: 2,
+        title: "Developer's Dilemma",
+        text: "Alex, your brilliant lead developer, knocks on your door looking unusually dejected.\n\n<span class=\"italic font-bold\">\"I need to talk,\"</span> he says, slumping into the chair across from you. <span class=\"italic font-bold\">\"I've been here three years, and lately, every day feels the same. Debug this, fix that, repeat. I love coding, but this routine is killing my motivation.\"</span>\n\nYou notice the dark circles under Alex's eyes and the lack of his usual enthusiasm. This isn't just about boredom – it's about job satisfaction and retention of a valuable team member.",
+        mentor: "This is a classic case of talent management! Remember, skilled professionals like Alex need more than just technical challenges...",
+        type: "individual",
+        character: "Alex",
+        choices: [
+          {text: "Offer Alex a bonus for sticking with the routine.", outcome: "neutral"},
+          {text: "Redesign Alex's role to increase autonomy, variety, and significance.", outcome: "good"},
+          {text: "Tell Alex to push through and focus on the paycheck.", outcome: "bad"}
+        ],
+        concept: {
+          title: "Job Characteristics Model",
+          explanation: "This scenario illustrates the Job Characteristics Model, showing how job satisfaction depends on variety, autonomy, and meaningful challenges."
+        }
+      },
+      {
+        day: 3,
+        title: "Design Team Deadlock",
+        text: "The atmosphere in the design team's workspace is tense. Your usually collaborative group sits in uncomfortable silence, their latest client project displayed on the main screen.\n\nSarah, the UI lead, speaks up: <span class=\"italic font-bold\">\"We've been stuck for days. Half the team wants to go minimal, half wants rich graphics. We're missing deadlines.\"</span>\n\nOther team members exchange frustrated glances. The client is expecting an update tomorrow, and your team's reputation for innovation hangs in the balance.",
+        mentor: "Team deadlocks can be tricky. Your approach here will set a precedent for how the team handles future conflicts...",
+        type: "team",
+        choices: [
+          {text: "Take full control and assign tasks to each member.", outcome: "bad"},
+          {text: "Facilitate a collaborative brainstorming session.", outcome: "good"},
+          {text: "Step back and let the team figure it out themselves.", outcome: "neutral"}
+        ],
+        concept: {
+          title: "Transformational Leadership",
+          explanation: "This scenario showcases Transformational Leadership principles in action, demonstrating how facilitative leadership can empower teams."
+        }
+      },
+      {
+        day: 4,
+        title: "Pay Equity Challenge",
+        text: "Mia, your talented marketing specialist, bursts into your office, visibly upset.\n\n<span class=\"italic font-bold\">\"I just found out that Tom, who joined six months after me, makes 15% more!\"</span> she says, her voice shaking. <span class=\"italic font-bold\">\"I've led three successful campaigns, stayed late countless times, and my performance reviews are excellent.\"</span>\n\nYou quickly pull up their files, noting that Mia's achievements indeed stand out. This salary disparity could impact not just Mia's motivation, but the entire team's morale if word spreads.",
+        mentor: "Pay equity issues are delicate but crucial. How we handle this will ripple through the entire organization...",
+        type: "individual",
+        character: "Mia",
+        choices: [
+          {text: "Address the pay disparity and ensure equity.", outcome: "good"},
+          {text: "Explain that salaries vary due to market conditions.", outcome: "neutral"},
+          {text: "Dismiss her concerns.", outcome: "bad"}
+        ],
+        concept: {
+          title: "Equity Theory",
+          explanation: "This scenario demonstrates Equity Theory in practice, showing how perceived fairness affects motivation and job satisfaction."
+        }
+      },
+      {
+        day: 5,
+        title: "Performance Review Time",
+        text: "It's annual review season, and you're staring at a stack of performance evaluations. Traditional reviews have always been manager-only assessments, but you've noticed they miss crucial aspects of employee contributions.\n\nJamie in customer support, for instance, gets average ratings from previous managers, but you've heard countless stories of how they've helped other teams succeed.\n\nYou wonder if there's a better way to capture the full picture of employee impact.",
+        mentor: "Performance reviews can make or break employee growth and motivation. Let's think about how to make them truly meaningful...",
+        type: "team",
+        choices: [
+          {text: "Use 360-degree feedback from peers, subordinates, and clients.", outcome: "good"},
+          {text: "Rely solely on your own observations.", outcome: "neutral"},
+          {text: "Skip detailed feedback this round.", outcome: "bad"}
+        ],
+        concept: {
+          title: "360-Degree Feedback",
+          explanation: "This scenario highlights the importance of comprehensive feedback systems in modern performance management."
+        }
+      }
+    ];
+
+    const week1Scenarios = [
+      {
+        day: 1,
+        title: "Mysterious Productivity Boost",
+        text: "Walking into your new office on a bright Monday morning, you're greeted by HR. They're waving a report in their hand.\n\n<span class=\"italic font-bold\">\"You won't believe this!\"</span> they exclaim. <span class=\"italic font-bold\">\"During our recent workplace observation study, productivity numbers shot up by 30%! The team's output has never been this high. Should we make these observation practices permanent?\"</span>\n\nYou lean back in your chair, considering the implications of this unexpected boost in performance.",
+        mentor: "Interesting findings from HR! Before we jump to conclusions, let's think about what might really be driving this sudden productivity increase...",
+        type: "team",
+        choices: [
+          {text: "Implement permanent changes to the work environment.", outcome: "neutral"},
+          {text: "Recognize that observation itself may be boosting performance.", outcome: "good"},
+          {text: "Ignore the increase; it's likely temporary.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 2,
+        title: "Developer's Dilemma",
+        text: "Alex, your brilliant lead developer, knocks on your door looking unusually dejected.\n\n<span class=\"italic font-bold\">\"I need to talk,\"</span> he says, slumping into the chair across from you. <span class=\"italic font-bold\">\"I've been here three years, and lately, every day feels the same. Debug this, fix that, repeat. I love coding, but this routine is killing my motivation.\"</span>\n\nYou notice the dark circles under Alex's eyes and the lack of his usual enthusiasm. This isn't just about boredom – it's about job satisfaction and retention of a valuable team member.",
+        mentor: "This is a classic case of talent management! Remember, skilled professionals like Alex need more than just technical challenges...",
+        type: "individual",
+        character: "Alex",
+        choices: [
+          {text: "Offer Alex a bonus for sticking with the routine.", outcome: "neutral"},
+          {text: "Redesign Alex's role to increase autonomy, variety, and significance.", outcome: "good"},
+          {text: "Tell Alex to push through and focus on the paycheck.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 3,
+        title: "Design Team Deadlock",
+        text: "The atmosphere in the design team's workspace is tense. Your usually collaborative group sits in uncomfortable silence, their latest client project displayed on the main screen.\n\nSarah, the UI lead, speaks up: <span class=\"italic font-bold\">\"We've been stuck for days. Half the team wants to go minimal, half wants rich graphics. We're missing deadlines.\"</span>\n\nOther team members exchange frustrated glances. The client is expecting an update tomorrow, and your team's reputation for innovation hangs in the balance.",
+        mentor: "Team deadlocks can be tricky. Your approach here will set a precedent for how the team handles future conflicts...",
+        type: "team",
+        choices: [
+          {text: "Take full control and assign tasks to each member.", outcome: "bad"},
+          {text: "Facilitate a collaborative brainstorming session.", outcome: "good"},
+          {text: "Step back and let the team figure it out themselves.", outcome: "neutral"}
+        ]
+      },
+      {
+        day: 4,
+        title: "Pay Equity Challenge",
+        text: "Mia, your talented marketing specialist, bursts into your office, visibly upset.\n\n<span class=\"italic font-bold\">\"I just found out that Tom, who joined six months after me, makes 15% more!\"</span> she says, her voice shaking. <span class=\"italic font-bold\">\"I've led three successful campaigns, stayed late countless times, and my performance reviews are excellent.\"</span>\n\nYou quickly pull up their files, noting that Mia's achievements indeed stand out. This salary disparity could impact not just Mia's motivation, but the entire team's morale if word spreads.",
+        mentor: "Pay equity issues are delicate but crucial. How we handle this will ripple through the entire organization...",
+        type: "individual",
+        character: "Mia",
+        choices: [
+          {text: "Address the pay disparity and ensure equity.", outcome: "good"},
+          {text: "Explain that salaries vary due to market conditions.", outcome: "neutral"},
+          {text: "Dismiss her concerns.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 5,
+        title: "Performance Review Time",
+        text: "It's annual review season, and you're staring at a stack of performance evaluations. Traditional reviews have always been manager-only assessments, but you've noticed they miss crucial aspects of employee contributions.\n\nJamie in customer support, for instance, gets average ratings from previous managers, but you've heard countless stories of how they've helped other teams succeed.\n\nYou wonder if there's a better way to capture the full picture of employee impact.",
+        mentor: "Performance reviews can make or break employee growth and motivation. Let's think about how to make them truly meaningful...",
+        type: "team",
+        choices: [
+          {text: "Use 360-degree feedback from peers, subordinates, and clients.", outcome: "good"},
+          {text: "Rely solely on your own observations.", outcome: "neutral"},
+          {text: "Skip detailed feedback this round.", outcome: "bad"}
+        ]
+      }
+    ];
+    
+    const week2Scenarios = [
+      {
+        day: 6,
+        title: "Growth Opportunity",
+        text: "Jordan, a promising junior analyst, requests a meeting with you.\n\n<span class=\"italic font-bold\">\"I love our team,\"</span> they begin, fidgeting with their notebook, <span class=\"italic font-bold\">\"but I feel stuck. I see all these opportunities to improve our data visualization process, but my current role is just about running the same reports every week.\"</span>\n\nTheir eyes light up as they describe their ideas for innovative dashboard designs. <span class=\"italic font-bold\">\"I want to contribute more meaningfully, but I don't know how to make that happen.\"</span>",
+        mentor: "This is a perfect opportunity to demonstrate how we value personal growth! Jordan's aspirations could benefit the whole team...",
+        type: "individual",
+        character: "Jordan",
+        choices: [
+          {text: "Assign tasks that align with their personal values and growth goals.", outcome: "good"},
+          {text: "Offer a raise to keep them satisfied.", outcome: "neutral"},
+          {text: "Encourage them to stay focused on current duties.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 7,
+        title: "Team Conflict",
+        text: "The tension between Ron from UX and Marcus from Development has reached a breaking point.\n\n<span class=\"italic font-bold\">\"I can't work with him anymore!\"</span> Marcus exclaims. <span class=\"italic font-bold\">\"He keeps changing requirements without considering our technical constraints!\"</span>\n\nRon fires back, <span class=\"italic font-bold\">\"And he never tries to understand our users' needs!\"</span> Other team members are taking sides, and your latest project is falling behind schedule. The office atmosphere grows more toxic by the hour.",
+        mentor: "Team conflicts need careful handling. The way you resolve this will shape future team dynamics...",
+        type: "team",
+        choices: [
+          {text: "Mediate a discussion and encourage open communication.", outcome: "good"},
+          {text: "Let them resolve it privately.", outcome: "neutral"},
+          {text: "Pick a side and reassign roles.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 8,
+        title: "Cultural Challenge",
+        text: "Your team has recently expanded internationally, with new members joining from various cultural backgrounds.\n\nDuring the latest project meeting, you notice Li Wei, a talented developer from Shanghai, rarely speaks up, while Amanda from New York dominates discussions.\n\nAfter the meeting, Li Wei sends you a detailed email with brilliant solutions they never mentioned. Meanwhile, other team members express frustration about <span class=\"italic font-bold\">\"communication barriers\"</span> and <span class=\"italic font-bold\">\"different working styles.\"</span>",
+        mentor: "Cultural differences can enrich a team, but they need proper support and understanding...",
+        type: "team",
+        choices: [
+          {text: "Host a diversity and inclusion workshop.", outcome: "good"},
+          {text: "Separate conflicting team members.", outcome: "neutral"},
+          {text: "Ignore the situation.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 9,
+        title: "Team Burnout",
+        text: "Your IT team looks exhausted. Carlos, usually the most energetic team member, stares blankly at his screen.\n\n<span class=\"italic font-bold\">\"Another urgent request,\"</span> he sighs, showing you his inbox filled with high-priority tickets. Elena chimes in, <span class=\"italic font-bold\">\"We're pulling late nights, missing family dinners, but the backlog keeps growing.\"</span>\n\nLooking around, you see coffee cups everywhere, dark circles under eyes, and slumped shoulders. The recent push for digital transformation has pushed the team to their limits.",
+        mentor: "Burnout is a serious concern that can affect both well-being and productivity. Let's think about sustainable solutions...",
+        type: "team",
+        choices: [
+          {text: "Reassess workloads and redistribute tasks.", outcome: "good"},
+          {text: "Offer temporary bonuses.", outcome: "neutral"},
+          {text: "Remind them that stress is part of the job.", outcome: "bad"}
+        ]
+      },
+      {
+        day: 10,
+        title: "Work-Life Balance",
+        text: "Chris, your senior project manager, has scheduled an important conversation with you.\n\n<span class=\"italic font-bold\">\"I'm struggling,\"</span> they admit, showing you pictures of their kids. <span class=\"italic font-bold\">\"I missed another school play yesterday because of our late meetings. I love my work, but I need more flexibility.\"</span>\n\nThey propose working remotely two days a week to better balance family commitments. <span class=\"italic font-bold\">\"I've thought it through,\"</span> they continue, pulling out a detailed plan for maintaining team coordination and productivity while working hybrid.",
+        mentor: "Modern workplace flexibility isn't just about where people work – it's about trust, productivity, and sustainable performance...",
+        type: "individual",
+        character: "Chris",
+        choices: [
+          {text: "Approve with clear expectations and accountability.", outcome: "good"},
+          {text: "Approve without guidelines.", outcome: "neutral"},
+          {text: "Deny the request outright.", outcome: "bad"}
+        ]
+      }
+    ];
+
+    let currentScenario = -1;
+    let currentWeek = 1;
+    let score = {good: 0, neutral: 0, bad: 0};
+
+    function showIntro() {
+      const gameDiv = document.getElementById('game');
+      document.getElementById('sarah-mentor').classList.add('hidden');
+      
+      gameDiv.innerHTML = `
+        <div class="max-w-6xl mx-auto mt-20">
+          <div class="flex gap-12 items-center">
+            <div class="w-1/2">
+              <img src="company.png" alt="Company Logo" class="w-full h-[600px] object-contain">
+            </div>
+            <div class="w-1/2 space-y-6 text-xl">
+              <h1 class="text-5xl font-bold mb-5">Office Odyssey</h1>
+              <p>After five years as a dedicated team lead at NextGen Tech, you've finally landed your big promotion to department manager. You're stepping into a role that comes with both high expectations and complex challenges.</p>
+              <p>Your team? A dynamic mix of personalities and talents who need the right balance of guidance and freedom.</p>
+              <p>Your mission is to navigate the ups and downs of daily office life, applying proven I/O Psychology principles to build a productive, motivated, and happy workplace. The success of your department—and your career—depends on your decisions.</p>
+              <p class="mt-12">Ready to take on the challenge?</p>
+            </div>
+          </div>
+          <div class="flex justify-center mt-12">
+            <button onclick="showSarahIntro()" 
+                    class="bg-black text-white px-16 py-3 rounded-full text-xl">
+              Ready
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function showSarahIntro() {
+      const gameDiv = document.getElementById('game');
+      document.getElementById('sarah-mentor').classList.add('hidden');
+      
+      gameDiv.innerHTML = `
+        <div class="flex flex-col justify-center items-center min-h-[80vh]">
+          <div class="flex items-center justify-center space-x-16 max-w-5xl">
+            <!-- Sarah's Avatar -->
+            <div class="flex flex-col items-center">
+              <div class="w-48 h-48 rounded-full bg-white border-2 border-black overflow-hidden mb-4">
+                <img src="sarah.png" alt="Sarah" class="w-full h-full">
+              </div>
+              <div class="bg-black text-white px-8 py-2 rounded-full text-xl">
+                Sarah
+              </div>
+            </div>
+
+            <!-- Sarah's Message -->
+            <p class="text-xl max-w-xl text-left italic leading-relaxed">
+              "Hi there! I'm Sarah, and I'll be your management mentor throughout this journey. After 15 years in leadership roles, I'm here to help guide you through the challenges of being a new manager at NextGen Tech. Let's work together to build an amazing team culture!"
+            </p>
+          </div>
+          <button onclick="startGame()" 
+                  class="bg-black text-white px-16 py-3 rounded-full text-xl w-96 mt-12">
+            Let's get to work!
+          </button>
+        </div>
+      `;
+    }
+
+    function startGame() {
+      currentWeek = 1;
+      currentScenario = 0;
+      score = {good: 0, neutral: 0, bad: 0};
+      document.getElementById('sarah-mentor').classList.remove('hidden');
+      showScenario();
+    }
+
+    function showScenario() {
+      const scenarios = currentWeek === 1 ? week1Scenarios : week2Scenarios;
+      const scenario = scenarios[currentScenario];
+      const gameDiv = document.getElementById('game');
+      const sarahMentor = document.getElementById('sarah-mentor');
+      const chatBubble = sarahMentor.querySelector('.chat-bubble');
+
+      if (scenario.type === 'individual') {
+        gameDiv.innerHTML = `
+          <div class="max-w-4xl mx-auto">
+            <div class="relative">
+              <div class="w-full flex justify-center">
+                <img src="scenario${scenario.day}.png" alt="Scenario ${scenario.day} illustration" class="w-full h-[500px] object-contain">
+              </div>
+              
+              <div class="absolute bottom-[-90px] left-0 right-0">
+                <div class="relative mx-8">
+                  <div class="absolute -top-4 left-0 bg-black text-white px-8 py-2 text-xl font-bold z-10">
+                    Day ${scenario.day}
+                  </div>
+                  <div class="border-2 border-black p-8 mt-4 bg-white">
+                    <p class="text-xl mt-2">${scenario.text}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3 mt-[110px] mx-8 mb-8">
+              ${scenario.choices.map((choice, index) => `
+                <button onclick="handleChoice('${choice.outcome}')" class="w-full bg-black text-white py-3 px-6 text-left hover:bg-gray-800 block">
+                  ${choice.text}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+      gameDiv.innerHTML = `
+          <div class="max-w-4xl mx-auto">
+            <div class="relative">
+              <div class="w-full flex justify-center">
+                <img src="scenario${scenario.day}.png" alt="Scenario ${scenario.day} illustration" class="w-full h-[500px] object-contain">
+              </div>
+              
+              <div class="absolute bottom-[-90px] left-0 right-0">
+                <div class="relative mx-8">
+                  <div class="absolute -top-4 left-0 bg-black text-white px-8 py-2 text-xl font-bold z-10">
+                    Day ${scenario.day}
+                  </div>
+                  <div class="border-2 border-black p-8 mt-4 bg-white">
+                    <p class="text-xl mt-2">${scenario.text}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3 mt-[110px] mx-8 mb-8">
+              ${scenario.choices.map((choice, index) => `
+                <button onclick="handleChoice('${choice.outcome}')" class="w-full bg-black text-white py-3 px-6 text-left hover:bg-gray-800 block">
+                  ${choice.text}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      sarahMentor.classList.remove('hidden');
+      chatBubble.textContent = scenario.mentor;
+    }
+
+    function getStarRating(dayScores) {
+      // Convert outcome to number of stars (3 for good, 2 for neutral, 1 for bad)
+      const numStars = dayScores === 'good' ? 3 : (dayScores === 'neutral' ? 2 : 1);
+      
+      return `
+        <div class="flex items-center space-x-1">
+          ${[1, 2, 3].map(i => `
+            <svg class="${i <= numStars ? 'text-yellow-400' : 'text-gray-300'}" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="${i <= numStars ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function toggleConcept(dayId) {
+      const conceptDiv = document.getElementById(dayId);
+      if (conceptDiv) {
+        conceptDiv.classList.toggle('hidden');
+      }
+    }
+
+    function getWeekScore(weekScores) {
+      let totalStars = 0;
+      const maxStars = Object.keys(weekScores).length * 3; // 5 scenarios * 3 stars = 15 max stars
+      
+      // Calculate total stars (3 for good, 2 for neutral, 1 for bad)
+      Object.values(weekScores).forEach(outcome => {
+        if (outcome === 'good') totalStars += 3;
+        else if (outcome === 'neutral') totalStars += 2;
+        else if (outcome === 'bad') totalStars += 1;
+      });
+      
+      // Calculate percentage of maximum stars
+      const starPercentage = (totalStars / maxStars) * 100;
+      
+      // Return score category based on star percentage
+      if (starPercentage === 100) return 'perfect'; // All 3 stars (15/15)
+      if (starPercentage >= 87) return 'excellent'; // At least 13/15 stars
+      if (starPercentage >= 73) return 'good'; // At least 11/15 stars
+      if (starPercentage >= 60) return 'average'; // At least 9/15 stars
+      if (starPercentage >= 47) return 'developing'; // At least 7/15 stars
+      return 'needsWork'; // 6 or fewer stars
+    }
+
+    function getWeekMessage(scoreCategory, isWeek1) {
+      const messages = {
+        perfect: {
+          title: "Perfect 3-Star Performance! Management Virtuoso!",
+          mentor: isWeek1 ? 
+            "Absolutely outstanding! Every decision earned the maximum 3 stars. Your choices consistently demonstrated perfect understanding of management principles and prioritized both employee well-being and organizational success!" :
+            "Flawless 3-star execution across all scenarios! You've mastered advanced management concepts and demonstrated exceptional leadership judgment in every situation!"
+        },
+        excellent: {
+          title: "Nearly Perfect! Star Performer!",
+          mentor: isWeek1 ?
+            "Excellent work! You earned almost all possible stars, showing strong insight into management principles. Just a few minor adjustments separate you from perfection!" :
+            "Outstanding performance! You earned nearly all available stars, showing excellent judgment in complex situations. Your leadership approach is highly effective!"
+        },
+        good: {
+          title: "Strong Star Collection! Shining Performance!",
+          mentor: isWeek1 ?
+            "Good job! You've earned a strong number of stars, showing solid grasp of key management concepts. Focus on turning those 2-star decisions into 3-star choices!" :
+            "Well done! You're earning consistent stars in advanced scenarios. Keep refining your approach to earn maximum stars in more situations!"
+        },
+        average: {
+          title: "Steady Progress! Building Your Star Power!",
+          mentor: isWeek1 ?
+            "You're showing promise! You've earned a mix of stars, with some great 3-star decisions. Let's work on improving your lower-starred choices!" :
+            "You're handling complex issues with growing confidence. Let's focus on turning more of your decisions into 3-star performances!"
+        },
+        developing: {
+          title: "Learning the Stars! Growing Potential!",
+          mentor: isWeek1 ?
+            "Every star earned is progress! Let's review the scenarios where you earned fewer stars and understand how to make 3-star decisions!" :
+            "These advanced scenarios are challenging! Let's analyze your lower-starred decisions and build strategies for earning more stars!"
+        },
+        needsWork: {
+          title: "Star Seeker! Time to Level Up!",
+          mentor: isWeek1 ?
+            "Don't worry - earning stars takes practice! Let's revisit each scenario and understand what makes a 3-star decision!" :
+            "Complex situations require careful consideration. Let's review each scenario and develop strategies to earn more stars!"
+        }
+      };
+      
+      return messages[scoreCategory];
+    }
+
+    function showWeek1Results() {
+      const gameDiv = document.getElementById('game');
+      const chatBubble = document.querySelector('.chat-bubble');
+      const scoreCategory = getWeekScore(score);
+      const message = getWeekMessage(scoreCategory, true);
+
+      gameDiv.innerHTML = `
+        <div class="space-y-6 max-w-4xl mx-auto">
+          <h2 class="text-3xl font-bold text-center">${message.title}</h2>
+          
+          <div class="mt-8">
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day1')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 1: The Hawthorne Effect</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day1 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day1" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day1 === 'good' ? 'Recognize that observation itself may be boosting performance.' : (score.day1 === 'neutral' ? 'Implement permanent changes to the work environment. (This might not address the real cause of the temporary boost)' : 'Ignore the increase; it\'s likely temporary. (Missing an opportunity to understand workplace behavior)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Recognize that observation itself may be boosting performance.</p>
+                <p>HR's excitement about the productivity boost was a classic <strong>Hawthorne Effect</strong> moment. The Hawthorne Effect describes how people change their behavior when they know they're being observed. When people know they're being observed, they often work harder—just like our team did. It's a reminder to look for lasting solutions, not just temporary spikes.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day2')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 2: Job Characteristics Model</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day2 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day2" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day2 === 'good' ? 'Redesign Alex\'s role to increase autonomy, variety, and significance.' : (score.day2 === 'neutral' ? 'Offer Alex a bonus for sticking with the routine. (Money alone doesn\'t address the core issue of job satisfaction)' : 'Tell Alex to push through and focus on the paycheck. (This could lead to decreased motivation and potential turnover)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Redesign Alex's role to increase autonomy, variety, and significance.</p>
+                <p>Alex's struggle showed the <strong>Job Characteristics Model</strong> in action. The Job Characteristics Model explains that jobs are more motivating when they offer variety, autonomy, and meaning. When work lacks variety, autonomy, or meaning, motivation drops. By redesigning Alex's role, we boosted both his engagement and the team's success.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day3')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 3: Transformational Leadership</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day3 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day3" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day3 === 'good' ? 'Facilitate a collaborative brainstorming session.' : (score.day3 === 'neutral' ? 'Step back and let the team figure it out themselves. (Lack of leadership guidance can prolong conflicts)' : 'Take full control and assign tasks to each member. (This approach stifles creativity and team autonomy)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Facilitate a collaborative brainstorming session.</p>
+                <p>The design team's deadlock was solved with <strong>Transformational Leadership</strong>. Transformational Leadership is a style where leaders inspire and motivate teams to innovate and work together toward a shared vision. By encouraging collaboration and new ideas, we turned conflict into creativity and set a positive tone for future teamwork.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day4')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 4: Equity Theory</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day4 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day4" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day4 === 'good' ? 'Address the pay disparity and ensure equity.' : (score.day4 === 'neutral' ? 'Explain that salaries vary due to market conditions. (This doesn\'t address the fairness concern)' : 'Dismiss her concerns. (This damages trust and could lead to decreased motivation)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Address the pay disparity and ensure equity.</p>
+                <p>Mia's pay concern brought <strong>Equity Theory</strong> to life. Equity Theory states that people are motivated by fairness in how rewards and resources are distributed. Fairness matters—when employees see unequal treatment, motivation suffers. Addressing the gap helped restore trust and morale.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day5')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 5: 360-Degree Feedback</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day5 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day5" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day5 === 'good' ? 'Use 360-degree feedback from peers, subordinates, and clients.' : (score.day5 === 'neutral' ? 'Rely solely on your own observations. (Missing valuable perspectives from other stakeholders)' : 'Skip detailed feedback this round. (Missed opportunity for growth and improvement)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Use 360-degree feedback from peers, subordinates, and clients.</p>
+                <p>Jamie's story highlights <strong>360-Degree Feedback</strong>. 360-Degree Feedback is a performance review method that gathers input from supervisors, peers, and others for a complete view. Getting input from all sides gives a fuller picture of performance and helps everyone grow, not just those in the spotlight.</p>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="startWeek2()" class="w-full bg-black text-white py-3 px-6 text-center rounded-full">
+            Start Week 2
+          </button>
+        </div>
+      `;
+
+      chatBubble.textContent = message.mentor;
+    }
+
+    function handleChoice(outcome) {
+      const dayNumber = currentScenario + 1;
+      score[`day${dayNumber}`] = outcome;
+      currentScenario++;
+      if (currentScenario < (currentWeek === 1 ? week1Scenarios : week2Scenarios).length) {
+        showScenario();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      if (currentWeek === 1) {
+        showWeek1Results();
+      } else {
+        showWeek2Results();
+      }
+    }
+
+    function showWeek2Results() {
+      const gameDiv = document.getElementById('game');
+      const chatBubble = document.querySelector('.chat-bubble');
+      const scoreCategory = getWeekScore(score);
+      const message = getWeekMessage(scoreCategory, false);
+
+      gameDiv.innerHTML = `
+        <div class="space-y-6 max-w-4xl mx-auto">
+          <h2 class="text-3xl font-bold text-center">${message.title}</h2>
+          
+          <div class="mt-8">
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day6')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 6: Maslow's Hierarchy of Needs</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day6 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day6" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day6 === 'good' ? 'Assign tasks that align with their personal values and growth goals.' : (score.day6 === 'neutral' ? 'Offer a raise to keep them satisfied. (Money doesn\'t address the desire for meaningful work)' : 'Encourage them to stay focused on current duties. (Ignores employee\'s growth needs)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Assign tasks that align with their personal values and growth goals.</p>
+                <p>Jordan's wish for more meaningful work reflects <strong>Maslow's Hierarchy of Needs</strong>. Maslow's Hierarchy of Needs is a theory that people are motivated to fulfill basic needs before moving on to higher-level growth and purpose. Once basic needs are met, people crave growth and purpose—just like Jordan did with their new ideas.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day7')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 7: Conflict Resolution</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day7 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day7" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day7 === 'good' ? 'Mediate a discussion and encourage open communication.' : (score.day7 === 'neutral' ? 'Let them resolve it privately. (Conflict may escalate without proper guidance)' : 'Pick a side and reassign roles. (Creates resentment and doesn\'t solve the underlying issue)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Mediate a discussion and encourage open communication.</p>
+                <p>Rachel and Marcus's clash was a lesson in <strong>Conflict Resolution</strong>. Conflict Resolution involves strategies to address disagreements and find solutions that satisfy everyone involved. By mediating, we helped them find common ground, turning tension into teamwork and keeping the project on track.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day8')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 8: Diversity and Inclusion</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day8 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day8" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day8 === 'good' ? 'Host a diversity and inclusion workshop.' : (score.day8 === 'neutral' ? 'Separate conflicting team members. (Avoids addressing cultural understanding needs)' : 'Ignore the situation. (Allows communication barriers to persist)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Host a diversity and inclusion workshop.</p>
+                <p>Li Wei and Amanda's team showed the value of <strong>Diversity and Inclusion</strong>. Diversity and Inclusion means embracing different backgrounds and perspectives to create a stronger, more innovative team. Embracing different backgrounds and communication styles made our team stronger and more creative.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day9')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 9: Job Demands-Resources Model</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day9 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day9" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day9 === 'good' ? 'Reassess workloads and redistribute tasks.' : (score.day9 === 'neutral' ? 'Offer temporary bonuses. (Doesn\'t address the underlying workload issue)' : 'Remind them that stress is part of the job. (Increases risk of burnout and turnover)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Reassess workloads and redistribute tasks.</p>
+                <p>Carlos and Elena's burnout was a warning from the <strong>Job Demands-Resources Model</strong>. The Job Demands-Resources Model explains that well-being depends on balancing job demands with the resources and support available. Too much pressure and too few resources lead to exhaustion. Balancing workloads keeps teams healthy and productive.</p>
+              </div>
+            </div>
+
+            <div class="border-2 border-black p-4 mb-4">
+              <button onclick="toggleConcept('day10')" class="w-full text-left flex justify-between items-center">
+                <span class="font-bold">DAY 10: Flexible Work Arrangements</span>
+                <div class="flex items-center space-x-4">
+                  ${getStarRating(score.day10 || 'neutral')}
+                  <span class="text-2xl">▼</span>
+                </div>
+              </button>
+              <div id="day10" class="hidden mt-4 p-4 bg-white">
+                <p class="mb-2 text-gray-600">Your choice: ${score.day10 === 'good' ? 'Approve with clear expectations and accountability.' : (score.day10 === 'neutral' ? 'Approve without guidelines. (Lack of structure could lead to confusion)' : 'Deny the request outright. (Misses opportunity to improve work-life balance)')}</p>
+                <p class="mb-4 text-green-700 font-medium">Best Practice: Approve with clear expectations and accountability.</p>
+                <p>Chris's request for flexibility showed the power of <strong>Work-Life Integration</strong>. Work-Life Integration is about creating harmony between work and personal life so both can thrive. Supporting balance helps employees thrive at work and at home, benefiting everyone.</p>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="startGame()" class="w-full bg-black text-white py-3 px-6 text-center rounded-full">
+            Start Over
+          </button>
+        </div>
+      `;
+
+      chatBubble.textContent = message.mentor;
+    }
+
+    function startWeek2() {
+      const gameDiv = document.getElementById('game');
+      document.getElementById('sarah-mentor').classList.add('hidden');
+
+      gameDiv.innerHTML = `
+        <div class="flex flex-col justify-center items-center min-h-[80vh]">
+          <div class="flex items-center justify-center space-x-16 max-w-5xl">
+            <!-- Sarah's Avatar -->
+            <div class="flex flex-col items-center">
+              <div class="w-48 h-48 rounded-full bg-white border-2 border-black overflow-hidden mb-4">
+                <img src="sarah.png" alt="Sarah" class="w-full h-full">
+              </div>
+              <div class="bg-black text-white px-8 py-2 rounded-full text-xl">
+                Sarah
+              </div>
+            </div>
+
+            <!-- Sarah's Message -->
+            <p class="text-xl max-w-xl text-left italic leading-relaxed">
+              "Great work on your first week! You're already showing strong management potential. Ready to tackle some new challenges? Let's see how you handle this week's situations!"
+            </p>
+        </div>
+          <button onclick="beginWeek2()" 
+                  class="bg-black text-white px-16 py-3 rounded-full text-xl w-96 mt-12">
+            Let's continue!
+          </button>
+        </div>
+      `;
+    }
+
+    function beginWeek2() {
+      currentWeek = 2;
+      currentScenario = 0;
+      score = {good: 0, neutral: 0, bad: 0};
+      document.getElementById('sarah-mentor').classList.remove('hidden');
+      showScenario();
+    }
+
+    // Start the game with the intro screen
+    showIntro();
+  </script>
+</body>
+</html>
